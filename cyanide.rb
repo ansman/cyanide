@@ -2,7 +2,8 @@ require 'open-uri'
 require 'sinatra'
 require 'nokogiri'
 require 'feedzirra'
-require 'thread'
+require 'cgi'
+require 'typhoeus'
 
 enable :logging
 set :environment, :development
@@ -31,20 +32,23 @@ def source_rss
 end
 
 def feed_items(feed)
-  items = []
-  mutex = Mutex.new
-  feed.entries.map do |entry|
-    Thread.new do
-      item = build_item(entry)
-      mutex.synchronize { items << item }
-    end
-  end.each { |t| t.join }
-  items.sort { |a, b| b[:pub_date] <=> a[:pub_date] }
+  hydra = Typhoeus::Hydra.new
+  requests = feed.entries.map { |e| Typhoeus::Request.new(e.url) }
+  requests.each { |r| hydra.queue(r) }
+  hydra.run
+
+  build_items(feed.entries, requests)
 end
 
-def build_item(entry)
+def build_items(entries, requests)
+  entries.zip(requests).map do |item|
+    build_item(item[0], item[1])
+  end
+end
+
+def build_item(entry, request)
   {
-    :src => fetch_image_src(entry.url),
+    :src => image_src(request.response.body),
     :title => build_item_title(entry.title),
     :link => entry.url,
     :guid => entry.entry_id,
@@ -52,13 +56,13 @@ def build_item(entry)
   }
 end
 
-def fetch_image_src(url)
-  doc = Nokogiri::HTML(open(url))
+def image_src(html)
+  doc = Nokogiri::HTML(html)
   img = ''
   doc.css('#maincontent img[alt="Cyanide and Happiness, a daily webcomic"]').each do |i|
     img = i.attributes['src']
   end
-  return img
+  return CGI::escapeHTML(img.to_s)
 end
 
 def build_item_title(title)
