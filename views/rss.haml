@@ -1,0 +1,15 @@
+!!! XML
+%rss{:version => "2.0", "xmlns:atom" => "http://www.w3.org/2005/Atom"}
+  %channel
+    %title #{@feed[:title]}
+    %link #{@feed[:link]}
+    %description #{@feed[:description]}
+    %atom:link{:href => "#{@feed[:feed_url]}", :rel => 'self', :type => 'application/rss+xml'}/
+    - @feed[:items].each do |item|
+      %item
+        %title= "#{item[:title]}"
+        %link= "#{item[:link]}"
+        %description= "<img src='#{item[:src]}' alt='Cyanide and Happiness, a daily webcomic' />"
+        %guid= "#{item[:guid]}"
+        %pubDate= "#{item[:pub_date].rfc2822}"
+        
