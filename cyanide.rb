@@ -59,7 +59,7 @@ end
 def image_src(html)
   doc = Nokogiri::HTML(html)
   img = ''
-  doc.css('#maincontent img[alt="Cyanide and Happiness, a daily webcomic"]').each do |i|
+  doc.css('#main-comic').each do |i|
     img = i.attributes['src']
   end
   return CGI::escapeHTML(img.to_s)
