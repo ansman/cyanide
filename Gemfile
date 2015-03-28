@@ -1,8 +1,9 @@
-source :rubygems
+source 'https://rubygems.org'
+ruby '2.1.3'
 
-gem 'nokogiri', '~> 1.4.4'
+gem 'nokogiri'
 gem 'sinatra'
-gem 'feedzirra'
+gem 'feedjira'
 gem 'rails'
 gem 'haml'
 gem 'typhoeus'

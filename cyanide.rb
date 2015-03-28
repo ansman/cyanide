@@ -1,9 +1,10 @@
 require 'open-uri'
 require 'sinatra'
 require 'nokogiri'
-require 'feedzirra'
+require 'feedjira'
 require 'cgi'
 require 'typhoeus'
+require 'haml'
 
 enable :logging
 set :environment, :development
@@ -28,12 +29,12 @@ def build_feed
 end
 
 def source_rss
-  Feedzirra::Feed.fetch_and_parse(settings.source)
+  Feedjira::Feed.fetch_and_parse(settings.source)
 end
 
 def feed_items(feed)
   hydra = Typhoeus::Hydra.new
-  requests = feed.entries.map { |e| Typhoeus::Request.new(e.url) }
+  requests = feed.entries.map { |e| Typhoeus::Request.new(e.url, followlocation: true) }
   requests.each { |r| hydra.queue(r) }
   hydra.run
 
